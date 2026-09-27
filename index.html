@@ -1,206 +1,431 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ExcelInsight — Excel Analytics Platform</title>
+  <title>SheetPulse - Excel & Spreadsheet BI Analytics</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#ecfdf5',
-              100: '#d1fae5',
-              500: '#10b981',
-              600: '#059669',
-              700: '#047857'
-            }
-          }
-        }
-      }
-    };
-  </script>
 
-  <!-- Core Libraries -->
-  <!-- SheetJS for reading/parsing Excel & CSV -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Chart.js for data visualization -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Lucide Icons -->
+  <!-- External Libraries: Lucide Icons, SheetJS, Chart.js -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Link your custom CSS file -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500/30">
+<body class="bg-[#f8fafc] text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-800">
 
-  <!-- Top Navbar -->
-  <header class="border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg">
-        <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+  <!-- Top Application Header -->
+  <header class="bg-white border-b border-slate-200/90 sticky top-0 z-40 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+      
+      <!-- Brand & Title Matching Screenshot -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+          <i data-lucide="file-spreadsheet" class="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.2]"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900">SheetPulse</span>
+            <span class="text-[10px] sm:text-[11px] font-bold tracking-wide uppercase px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/70">BI PRO</span>
+          </div>
+          <p class="text-xs text-slate-500 leading-tight hidden sm:block">Interactive Excel & CSV Intelligence Engine</p>
+        </div>
       </div>
-      <div>
-        <h1 class="font-semibold tracking-tight text-white leading-tight flex items-center gap-2">
-         ExcelInsight<span class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded-full font-mono">v1.0</span>
-        </h1>
-        <p class="text-xs text-slate-400"> Excel & Data Intelligence</p>
-      </div>
-    </div>
 
-    <!-- Quick Sample Datasets -->
-    <div class="flex items-center gap-2 text-xs">
-      <span class="text-slate-400 hidden sm:inline">Try Demo Data:</span>
-      <button id="loadSalesBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-        E-Commerce
-      </button>
-      <button id="loadSaaSBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-        SaaS Metrics
-      </button>
+      <!-- Header Action Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- Load Sample Dropdown -->
+        <div class="relative">
+          <button id="sampleDropdownBtn" onclick="toggleSampleMenu()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition shadow-xs">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+            <span class="hidden sm:inline">Load Sample</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+          
+          <div id="sampleDropdownMenu" class="hidden absolute right-0 mt-2 w-64 rounded-2xl shadow-xl bg-white border border-slate-100 ring-1 ring-black/5 z-50 p-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1 block">Preset Datasets</span>
+            <button onclick="loadSampleDataset('sales')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-50 text-slate-800 font-medium flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-slate-900">E-Commerce & Orders</div>
+                <div class="text-[11px] text-slate-400">Sales, Regions, Profits</div>
+              </div>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            </button>
+            <button onclick="loadSampleDataset('students')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-50 text-slate-800 font-medium flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-slate-900">Student Academic Marks</div>
+                <div class="text-[11px] text-slate-400">Classes, Grades, Subjects</div>
+              </div>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            </button>
+            <button onclick="loadSampleDataset('employees')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-50 text-slate-800 font-medium flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-slate-900">Employee HR Directory</div>
+                <div class="text-[11px] text-slate-400">Departments, Salaries, Cities</div>
+              </div>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Export Dropdown -->
+        <div class="relative">
+          <button id="exportDropdownBtn" onclick="toggleExportMenu()" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition shadow-xs">
+            <i data-lucide="download" class="w-4 h-4 text-slate-600"></i>
+            <span class="hidden sm:inline">Export</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+          
+          <div id="exportDropdownMenu" class="hidden absolute right-0 mt-2 w-48 rounded-2xl shadow-xl bg-white border border-slate-100 ring-1 ring-black/5 z-50 p-1.5">
+            <button onclick="exportCurrentData('xlsx')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+              <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i> Export Excel (.xlsx)
+            </button>
+            <button onclick="exportCurrentData('csv')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+              <i data-lucide="file-text" class="w-4 h-4 text-blue-600"></i> Export CSV (.csv)
+            </button>
+            <button onclick="exportCurrentData('json')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-2">
+              <i data-lucide="code" class="w-4 h-4 text-amber-600"></i> Export JSON (.json)
+            </button>
+          </div>
+        </div>
+
+        <!-- Primary Upload File Button -->
+        <label for="excelFileInput" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-sm shadow-indigo-500/25 active:scale-95 transition">
+          <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+          <span>Upload File</span>
+        </label>
+        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileUpload(event)" />
+      </div>
+
     </div>
   </header>
 
-  <!-- Main Content Layout -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+  <main class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 w-full flex-1 flex flex-col gap-5">
 
-    <!-- Upload Dropzone -->
-    <section id="dropzone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-2xl p-8 transition-all bg-slate-900/40 text-center cursor-pointer group">
-      <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv" />
-      <div class="flex flex-col items-center gap-3">
-        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-          <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+    <!-- Active File & Multi-Sheet Banner Matching Screenshot -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <!-- Rounded Green Spreadsheet Icon Box -->
+        <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-xs">
+          <i data-lucide="table-2" class="w-6 h-6 stroke-[2.2]"></i>
         </div>
-        <div>
-          <p class="text-base font-medium text-slate-200">
-            Click to upload or drag & drop spreadsheet
-          </p>
-          <p class="text-xs text-slate-400 mt-1 font-mono">
-            Supports .XLSX, .XLS, and .CSV files (100% processed securely in-browser)
-          </p>
+
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 id="bannerFileName" class="text-sm font-bold text-slate-900 tracking-tight truncate max-w-xs sm:max-w-md">Dummy_Student_and_Employee_Dat...</h2>
+            <div class="flex items-center gap-1.5">
+              <span id="bannerRowCount" class="text-[11px] font-semibold bg-slate-100 text-slate-700 px-3 py-0.5 rounded-full font-mono">18 Rows</span>
+              <span id="bannerColCount" class="text-[11px] font-semibold bg-slate-100 text-slate-700 px-3 py-0.5 rounded-full font-mono">8 Columns</span>
+            </div>
+          </div>
+          <p class="text-[11.5px] text-slate-500 mt-0.5">Auto-parsed with SheetJS &bull; Ready for dynamic filtering and KPI tracking</p>
         </div>
       </div>
-    </section>
 
-    <!-- File & Sheet Metadata Bar -->
-    <div id="fileMeta" class="hidden flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-900/60 border border-slate-800">
-      <div class="flex items-center gap-3">
-        <i data-lucide="file-check-2" class="text-emerald-400 w-5 h-5"></i>
-        <div>
-          <span id="fileName" class="text-sm font-medium text-slate-200">sample.xlsx</span>
-          <span id="fileSize" class="text-xs text-slate-400 ml-2 font-mono"></span>
-        </div>
+      <!-- Sheet Tabs Switcher (Pill UI matching screenshot) -->
+      <div class="flex items-center gap-2 overflow-x-auto py-1">
+        <span class="text-xs text-slate-400 font-medium flex items-center gap-1 shrink-0">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i> Sheets:
+        </span>
+        <div id="sheetPillContainer" class="flex items-center gap-1.5 flex-nowrap"></div>
       </div>
-      <!-- Multi-sheet tabs -->
-      <div id="sheetTabs" class="flex items-center gap-1.5 overflow-x-auto py-1"></div>
     </div>
 
-    <!-- KPI Summary Cards -->
-    <section id="kpiRibbon" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
-      <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-xs text-slate-400 font-medium">Total Records</span>
-        <div id="kpiTotalRows" class="text-2xl font-bold text-white mt-1">-</div>
-      </div>
-      <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-xs text-slate-400 font-medium">Total Columns</span>
-        <div id="kpiTotalCols" class="text-2xl font-bold text-white mt-1">-</div>
-      </div>
-      <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span id="kpiNumericLabel1" class="text-xs text-slate-400 font-medium">Primary Sum</span>
-        <div id="kpiNumericVal1" class="text-2xl font-bold text-emerald-400 mt-1 font-mono">-</div>
-      </div>
-      <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span id="kpiNumericLabel2" class="text-xs text-slate-400 font-medium">Primary Average</span>
-        <div id="kpiNumericVal2" class="text-2xl font-bold text-indigo-400 mt-1 font-mono">-</div>
-      </div>
-    </section>
+    <!-- Platform Tabs Navigation (No Dashboard Overview, No Pivot & Matrix) -->
+    <div class="border-b border-slate-200/90">
+      <nav class="flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Platform Views">
+        <!-- 1. Data Grid & Filter -->
+        <button onclick="switchTab('grid')" id="tabBtn-grid" class="tab-nav-btn pb-3 px-1 border-b-2 font-semibold text-xs sm:text-sm text-indigo-600 border-indigo-600 flex items-center gap-2 whitespace-nowrap">
+          <i data-lucide="table" class="w-4 h-4"></i> Data Grid & Filter
+        </button>
 
-    <!-- Chart Analytics Section -->
-    <section id="analyticsSection" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Controls -->
-      <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
-        <h3 class="font-medium text-slate-200 text-sm flex items-center gap-2">
-          <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i> Chart Configuration
-        </h3>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">Chart Type</label>
-          <select id="chartType" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="bar">Bar Chart</option>
-            <option value="line">Line Chart</option>
-            <option value="pie">Pie Chart</option>
-            <option value="doughnut">Doughnut Chart</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">X-Axis (Category / Label)</label>
-          <select id="chartDimX" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"></select>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">Y-Axis (Numeric Metric)</label>
-          <select id="chartDimY" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"></select>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">Aggregation Function</label>
-          <select id="chartAgg" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="sum">Sum</option>
-            <option value="avg">Average</option>
-            <option value="count">Count Records</option>
-          </select>
-        </div>
-      </div>
+        <!-- 2. Chart Studio -->
+        <button onclick="switchTab('charts')" id="tabBtn-charts" class="tab-nav-btn pb-3 px-1 border-b-2 font-semibold text-xs sm:text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 flex items-center gap-2 whitespace-nowrap">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Chart Studio
+        </button>
 
-      <!-- Chart Display Area -->
-      <div class="lg:col-span-2 p-5 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col">
-        <div class="flex items-center justify-between mb-4">
-          <h3 id="chartTitle" class="font-medium text-slate-200 text-sm">Visual Distribution</h3>
-          <button id="downloadChartBtn" class="text-xs flex items-center gap-1.5 text-slate-400 hover:text-white transition">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Export PNG
+        <!-- 3. Category Summary & Averages -->
+        <button onclick="switchTab('category')" id="tabBtn-category" class="tab-nav-btn pb-3 px-1 border-b-2 font-semibold text-xs sm:text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 flex items-center gap-2 whitespace-nowrap">
+          <i data-lucide="split" class="w-4 h-4"></i> Category Summary & Averages
+        </button>
+
+        <!-- 4. Data Hygiene & Stats (Target from user screenshot) -->
+        <button onclick="switchTab('hygiene')" id="tabBtn-hygiene" class="tab-nav-btn pb-3 px-1 border-b-2 font-semibold text-xs sm:text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300 flex items-center gap-2 whitespace-nowrap">
+          <i data-lucide="shield-check" class="w-4 h-4"></i> Data  & Stats
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB 1: DATA GRID & FILTER -->
+    <div id="tabContent-grid" class="tab-panel space-y-4">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-4 sm:p-5 flex flex-col gap-4">
+        
+        <!-- Filter Controls Row -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <!-- Real-Time Search Box -->
+          <div class="relative w-full sm:w-96">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input 
+              type="text" 
+              id="gridSearchInput" 
+              placeholder="Filter rows across all columns..." 
+              oninput="handleGridSearch(this.value)" 
+              class="w-full pl-10 pr-4 py-2 text-xs bg-slate-50/70 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 font-normal transition placeholder-slate-400"
+            />
+          </div>
+
+          <!-- Target Column Filter & Counter Matching Screenshot -->
+          <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+            <select id="gridColumnFilterSelect" onchange="renderGridData()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium text-slate-700 focus:outline-none focus:border-indigo-500">
+              <option value="all">All Columns</option>
+            </select>
+
+            <span class="text-slate-300">|</span>
+
+            <span id="gridShowingCountLabel" class="text-xs font-medium text-slate-600 font-mono">Showing 18 of 18</span>
+
+            <button onclick="resetGridSearch()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold px-2 py-1 rounded-lg hover:bg-indigo-50 transition">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Spreadsheet Table Structure with ABC and 123 Badges -->
+        <div class="overflow-x-auto border border-slate-200/70 rounded-xl bg-white max-h-[500px]">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-[#f8fafc] text-slate-700 font-semibold sticky top-0 shadow-xs z-10 border-b border-slate-200">
+              <tr id="gridHeaderRow"></tr>
+            </thead>
+            <tbody id="gridTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+
+        <!-- Grid Pagination Controls -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 pt-1">
+          <div class="flex items-center gap-2">
+            <span>Rows per page:</span>
+            <select id="gridPageSizeSelect" onchange="changeGridPageSize(this.value)" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 font-mono">
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btnGridPrev" onclick="navigateGridPage(-1)" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40">
+              <i data-lucide="chevron-left" class="w-4 h-4 text-slate-600"></i>
+            </button>
+            <span id="gridPageIndicator" class="px-2 font-medium text-slate-700 font-mono">Page 1 of 1</span>
+            <button id="btnGridNext" onclick="navigateGridPage(1)" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40">
+              <i data-lucide="chevron-right" class="w-4 h-4 text-slate-600"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: CHART STUDIO -->
+    <div id="tabContent-charts" class="tab-panel hidden space-y-5">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+        <!-- Configuration Card -->
+        <div class="lg:col-span-1 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs space-y-4">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i> Chart Configuration
+            </h3>
+            <p class="text-xs text-slate-500">Plot visual trends across any columns</p>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-700 block mb-1.5">Chart Type</label>
+            <select id="studioChartType" onchange="renderStudioChart()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-700">
+              <option value="bar">Bar / Column</option>
+              <option value="line">Line Graph</option>
+              <option value="doughnut">Doughnut Chart</option>
+              <option value="pie">Pie Chart</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-700 block mb-1.5">Dimension (X-Axis)</label>
+            <select id="studioXCol" onchange="renderStudioChart()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-700"></select>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-700 block mb-1.5">Metric (Y-Axis)</label>
+            <select id="studioYCol" onchange="renderStudioChart()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-700"></select>
+          </div>
+
+          <div>
+            <label class="text-xs font-semibold text-slate-700 block mb-1.5">Calculation</label>
+            <select id="studioAgg" onchange="renderStudioChart()" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-medium text-slate-700">
+              <option value="avg"> Data </option>
+              <!-- <option value="sum">Sum (&Sigma;)</option>
+              <option value="count">Count Frequency</option>
+              <option value="max">Maximum</option>
+              <option value="min">Minimum</option> -->
+            </select>
+          </div>
+
+          <button onclick="renderStudioChart()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
+            Refresh Visual
           </button>
         </div>
-        <div class="flex-1 min-h-[300px] relative">
-          <canvas id="mainChart"></canvas>
+
+        <!-- Studio Canvas Card -->
+        <div class="lg:col-span-3 bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div>
+              <h3 id="studioChartTitle" class="text-sm font-bold text-slate-900">Visual Insights</h3>
+              <p id="studioChartDesc" class="text-xs text-slate-500">Auto-aggregated for active spreadsheet</p>
+            </div>
+            <button onclick="downloadStudioChart()" class="px-3 py-1.5 text-xs border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-700 font-medium flex items-center gap-1.5">
+              <i data-lucide="camera" class="w-3.5 h-3.5 text-slate-500"></i> Export PNG
+            </button>
+          </div>
+          <div class="relative h-[380px] w-full flex items-center justify-center">
+            <canvas id="studioChartCanvas"></canvas>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Spreadsheet Data Table -->
-    <section id="tableSection" class="hidden rounded-2xl bg-slate-900/80 border border-slate-800 p-5 space-y-4">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h3 class="font-medium text-slate-200 text-sm flex items-center gap-2">
-          <i data-lucide="table" class="w-4 h-4 text-emerald-400"></i> Spreadsheet Records
-        </h3>
-        <input 
-          id="tableSearch" 
-          type="text" 
-          placeholder="Search records..." 
-          class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-full sm:w-64"
-        />
-      </div>
-      
-      <div class="overflow-x-auto max-h-[420px] rounded-lg border border-slate-800">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead id="tableHead" class="sticky top-0 bg-slate-900 text-slate-400 border-b border-slate-800 font-mono"></thead>
-          <tbody id="tableBody" class="divide-y divide-slate-800/60 font-mono"></tbody>
-        </table>
-      </div>
+    <!-- TAB 3: CATEGORY SUMMARY & AVERAGES -->
+    <div id="tabContent-category" class="tab-panel hidden space-y-5">
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="split" class="w-4 h-4 text-indigo-600"></i> Full Category Averages & Aggregations
+            </h3>
+            <p class="text-xs text-slate-500">Aggregates every category in your dataset (all regions, all classes, all departments) without truncating to top items.</p>
+          </div>
 
-      <!-- Pagination Footer -->
-      <div class="flex items-center justify-between text-xs text-slate-400 pt-2">
-        <span id="pageInfo">Showing 0 of 0</span>
-        <div class="flex items-center gap-2">
-          <button id="prevPage" class="px-3 py-1 rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-50">Prev</button>
-          <button id="nextPage" class="px-3 py-1 rounded bg-slate-800 border border-slate-700 hover:bg-slate-700 disabled:opacity-50">Next</button>
+          <!-- Group Selectors -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div>
+              <label class="text-[11px] font-semibold text-slate-600 block mb-1">Group By Category (X):</label>
+              <select id="categoryGroupSelect" onchange="runCategoryAggregation()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-medium text-slate-700 focus:outline-none focus:border-indigo-500"></select>
+            </div>
+            <div>
+              <label class="text-[11px] font-semibold text-slate-600 block mb-1">Calculate Values For (Y):</label>
+              <select id="categoryMetricSelect" onchange="runCategoryAggregation()" class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 font-medium text-slate-700 focus:outline-none focus:border-indigo-500"></select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aggregation Table and Chart Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-1">
+          <!-- Comprehensive Breakdown Table -->
+          <div class="lg:col-span-2 overflow-x-auto border border-slate-200/70 rounded-xl max-h-[460px]">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead class="bg-[#f8fafc] text-slate-700 font-semibold sticky top-0 border-b border-slate-200">
+                <tr>
+                  <th class="py-2.5 px-3">Category Value</th>
+                  <th class="py-2.5 px-3 font-mono">Row Count</th>
+                  <th class="py-2.5 px-3 font-mono">Total Sum</th>
+                  <th class="py-2.5 px-3 font-mono text-indigo-600 font-semibold">Calculated Average</th>
+                  <th class="py-2.5 px-3 font-mono">Min Value</th>
+                  <th class="py-2.5 px-3 font-mono">Max Value</th>
+                  <th class="py-2.5 px-3 font-mono text-right">% of Grand Total</th>
+                </tr>
+              </thead>
+              <tbody id="categoryTableBody" class="divide-y divide-slate-100 font-mono text-slate-700"></tbody>
+              <tfoot id="categoryTableFoot" class="bg-slate-50 font-mono font-bold text-slate-900 border-t border-slate-200"></tfoot>
+            </table>
+          </div>
+
+          <!-- Category Comparison Chart -->
+          <div class="p-4 rounded-xl border border-slate-200/80 bg-slate-50/50 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3 border-b border-slate-200/70 pb-2">
+              <span id="categoryChartTitle" class="text-xs font-semibold text-slate-700">Category Comparison</span>
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Average</span>
+            </div>
+            <div class="relative h-[320px] w-full flex items-center justify-center">
+              <canvas id="categoryChartCanvas"></canvas>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+
+    <!-- TAB 4: DATA HYGIENE & STATS (EXACT SCREENSHOT RECREATION) -->
+    <div id="tabContent-hygiene" class="tab-panel hidden space-y-6">
+
+      <!-- 1. Quick Data Transformations Card -->
+      <div class="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="wrench" class="w-5 h-5 text-indigo-600"></i> Quick Data Transformations
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">Clean dataset artifacts directly inside your browser</p>
+        </div>
+
+        <!-- Action Buttons matching screenshot -->
+        <div class="flex flex-wrap items-center gap-3 pt-1">
+          <!-- Deduplicate Rows -->
+          <button onclick="hygieneRemoveDuplicates()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition active:scale-95">
+            <i data-lucide="copy" class="w-4 h-4 text-slate-500"></i>
+            <span>Deduplicate Rows</span>
+          </button>
+
+          <!-- Strip Empty / Null Rows -->
+          <button onclick="hygieneStripNullRows()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 text-slate-700 font-semibold text-xs shadow-xs transition active:scale-95">
+            <i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i>
+            <span>Strip Empty / Null Rows</span>
+          </button>
+
+          <!-- Standardize Text & Trim Spaces -->
+          <button onclick="hygieneTrimWhitespace()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition active:scale-95">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+            <span>Standardize Text & Trim Spaces</span>
+          </button>
+
+          <!-- Restore Original Data -->
+          <button onclick="hygieneRestoreOriginal()" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs shadow-xs transition active:scale-95">
+            <i data-lucide="rotate-ccw" class="w-4 h-4 text-slate-500"></i>
+            <span>Restore Original Data</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Column Profiles & Data Health Header Matching Screenshot -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-2 px-1">
+          <i data-lucide="table-2" class="w-4 h-4 text-emerald-600"></i>
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight">Column Profiles & Data Health</h3>
+        </div>
+
+        <!-- Dynamic Grid of Column Cards matching screenshot -->
+        <div id="columnProfilesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+    </div>
 
   </main>
 
-  <!-- Connect your JavaScript logic file -->
+  <!-- Notification Toast -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white text-xs font-medium px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700">
+      <i id="toastIcon" data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toastMessage">Action completed successfully!</span>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
   <script src="app.js"></script>
 </body>
 </html>
